@@ -1,45 +1,32 @@
-import { createStore, combineReducers } from 'redux';
-import { composeWithDevTools } from 'redux-devtools-extension';
-import counterReducer from 'redux/counter/counter-reducer';
-
-const rootReducer = combineReducers({
-  counter: counterReducer,
+import { configureStore } from '@reduxjs/toolkit';
+import logger from 'redux-logger';
+import {
+  persistStore,
+  persistReducer,
+  FLUSH,
+  REHYDRATE,
+  PAUSE,
+  PERSIST,
+  PURGE,
+  REGISTER,
+} from 'redux-persist';
+import storage from 'redux-persist/lib/storage';
+import contactsReducer from './contacts/contacts-reducer';
+const contactsPersistConfig = {
+  key: 'contactsArr',
+  storage,
+  blacklist: ['filter'],
+};
+export const store = configureStore({
+  reducer: {
+    contacts: persistReducer(contactsPersistConfig, contactsReducer),
+  },
+  middleware: getDefaultMiddleware =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+      },
+    }).concat(logger),
+  devTools: process.env.NODE_ENV === 'development',
 });
-
-const store = createStore(rootReducer, composeWithDevTools());
-
-export default store;
-
-// ========================
-// const initialState = {
-//   counter: {
-//     value: 10,
-//     step: 10,
-//   },
-// };
-
-// const reducer = (state = initialState, { type, payload }) => {
-//   switch (type) {
-//     case 'counter/increment':
-//       return {
-//         ...state,
-//         counter: {
-//           ...state.counter,
-//           value: state.counter.value + payload,
-//         },
-//       };
-
-//     case 'counter/decrement':
-//       return {
-//         ...state,
-//         counter: {
-//           ...state.counter,
-//           value: state.counter.value - payload,
-//         },
-//       };
-
-//     default:
-//       return state;
-//   }
-// };
-// ========================
+export const persistor = persistStore(store);
